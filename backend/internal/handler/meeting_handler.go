@@ -18,8 +18,8 @@ type CreateMeetingRequest struct {
 }
 
 type UpdateMeetingRequest struct {
-	Title       string  `json:"title" binding:"required"`
-	Description string  `json:"description"`
+	Title       *string `json:"title" binding:"omitempty,min=3"`
+	Description *string `json:"description"`
 	MeetingURL  *string `json:"meeting_url"` // Pointer allows null
 }
 
@@ -98,13 +98,20 @@ func (h *MeetingHandler) UpdateMeeting(c *gin.Context) {
 		return
 	}
 
-	meetingParams := models.Meeting{
-		Title:       req.Title,
-		Description: req.Description,
-		MeetingURL:  req.MeetingURL,
+	// CREATE A MAP, NOT A STRUCT
+	updates := make(map[string]interface{})
+
+	if req.Title != nil {
+		updates["title"] = *req.Title
+	}
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+	if req.MeetingURL != nil {
+		updates["meeting_url"] = *req.MeetingURL
 	}
 
-	meeting, err := h.MeetingService.UpdateMeeting(uint(id), &meetingParams)
+	meeting, err := h.MeetingService.UpdateMeeting(uint(id), updates)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -123,8 +130,13 @@ func (h *MeetingHandler) DeleteMeeting(c *gin.Context) {
 
 	err = h.MeetingService.DeleteMeeting(uint(id))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Meeting not found"})
+			return
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Meeting deleted successfully"})
 }

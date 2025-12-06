@@ -39,12 +39,21 @@ func (s *MeetingService) GetAllMeetings() ([]models.Meeting, error) {
 	return meetings, nil
 }
 
-func (s *MeetingService) UpdateMeeting(id uint, meeting *models.Meeting) (*models.Meeting, error) {
-	err := s.DB.Model(&models.Meeting{}).Where("id = ?", id).Updates(meeting).Error
-	if err != nil {
+func (s *MeetingService) UpdateMeeting(id uint, updates map[string]interface{}) (*models.Meeting, error) {
+	var meeting models.Meeting
+
+	// 1. Find the meeting first (to ensure it exists)
+	if err := s.DB.First(&meeting, id).Error; err != nil {
 		return nil, err
 	}
-	return meeting, nil
+
+	// 2. Apply updates using the MAP
+	// GORM will now respect empty strings if they are in the map
+	if err := s.DB.Model(&meeting).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+
+	return &meeting, nil
 }
 
 func (s *MeetingService) DeleteMeeting(id uint) error {
