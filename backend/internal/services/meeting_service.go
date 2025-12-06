@@ -38,3 +38,19 @@ func (s *MeetingService) GetAllMeetings() ([]models.Meeting, error) {
 	}
 	return meetings, nil
 }
+
+func (s *MeetingService) UpdateMeeting(id uint, meeting *models.Meeting) (*models.Meeting, error) {
+	err := s.DB.Model(&models.Meeting{}).Where("id = ?", id).Updates(meeting).Error
+	if err != nil {
+		return nil, err
+	}
+	return meeting, nil
+}
+
+func (s *MeetingService) DeleteMeeting(id uint) error {
+	err := s.DB.Delete(&models.Meeting{}, id).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
