@@ -8,4 +8,6 @@ import (
 func MeetingRoutes(router *gin.RouterGroup, meetingHandler *handler.MeetingHandler) {
 	meetingsRouter := router.Group("/meetings")
 	meetingsRouter.POST("/", meetingHandler.CreateMeeting)
+	meetingsRouter.GET("/:id", meetingHandler.GetMeeting)
+	meetingsRouter.GET("/", meetingHandler.GetAllMeetings)
 }
