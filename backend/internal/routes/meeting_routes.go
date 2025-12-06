@@ -10,4 +10,6 @@ func MeetingRoutes(router *gin.RouterGroup, meetingHandler *handler.MeetingHandl
 	meetingsRouter.POST("/", meetingHandler.CreateMeeting)
 	meetingsRouter.GET("/:id", meetingHandler.GetMeeting)
 	meetingsRouter.GET("/", meetingHandler.GetAllMeetings)
+	meetingsRouter.PUT("/:id", meetingHandler.UpdateMeeting)
+	meetingsRouter.DELETE("/:id", meetingHandler.DeleteMeeting)
 }

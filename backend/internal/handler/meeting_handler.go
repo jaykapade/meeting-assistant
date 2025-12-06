@@ -17,6 +17,12 @@ type CreateMeetingRequest struct {
 	MeetingURL  *string `json:"meeting_url"` // Pointer allows null
 }
 
+type UpdateMeetingRequest struct {
+	Title       string  `json:"title" binding:"required"`
+	Description string  `json:"description"`
+	MeetingURL  *string `json:"meeting_url"` // Pointer allows null
+}
+
 type MeetingHandler struct {
 	MeetingService *services.MeetingService
 }
@@ -76,4 +82,49 @@ func (h *MeetingHandler) GetAllMeetings(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, meetings)
+}
+
+func (h *MeetingHandler) UpdateMeeting(c *gin.Context) {
+	meetingId := c.Param("id")
+	id, err := strconv.ParseUint(meetingId, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	var req UpdateMeetingRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	meetingParams := models.Meeting{
+		Title:       req.Title,
+		Description: req.Description,
+		MeetingURL:  req.MeetingURL,
+	}
+
+	meeting, err := h.MeetingService.UpdateMeeting(uint(id), &meetingParams)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, meeting)
+}
+
+func (h *MeetingHandler) DeleteMeeting(c *gin.Context) {
+	meetingId := c.Param("id")
+	id, err := strconv.ParseUint(meetingId, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	err = h.MeetingService.DeleteMeeting(uint(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Meeting deleted successfully"})
 }
