@@ -20,3 +20,21 @@ func (s *MeetingService) CreateMeeting(meeting *models.Meeting) (*models.Meeting
 	}
 	return meeting, nil
 }
+
+func (s *MeetingService) GetMeeting(id uint) (*models.Meeting, error) {
+	var meeting models.Meeting
+	err := s.DB.First(&meeting, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &meeting, nil
+}
+
+func (s *MeetingService) GetAllMeetings() ([]models.Meeting, error) {
+	var meetings []models.Meeting
+	err := s.DB.Find(&meetings).Error
+	if err != nil {
+		return nil, err
+	}
+	return meetings, nil
+}

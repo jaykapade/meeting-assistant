@@ -12,7 +12,7 @@ type RouteConfig struct {
 func RegisterRoutes(router *gin.Engine, cfg *RouteConfig) {
 	api := router.Group("/api/v1")
 
-	router.GET("/hello", func(c *gin.Context) {
+	api.GET("/hello", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "Hello, World!",
 		})

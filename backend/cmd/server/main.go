@@ -8,7 +8,6 @@ import (
 	"github.com/jaykapade/meeting-assistant/backend/internal/config"
 	"github.com/jaykapade/meeting-assistant/backend/internal/db"
 	"github.com/jaykapade/meeting-assistant/backend/internal/handler"
-	"github.com/jaykapade/meeting-assistant/backend/internal/models"
 	"github.com/jaykapade/meeting-assistant/backend/internal/routes"
 	"github.com/jaykapade/meeting-assistant/backend/internal/services"
 )
@@ -23,7 +22,7 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	err = dbConn.AutoMigrate(&models.Meeting{})
+	// err = dbConn.AutoMigrate(&models.Meeting{})
 
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
