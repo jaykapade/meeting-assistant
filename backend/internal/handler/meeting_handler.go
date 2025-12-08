@@ -15,12 +15,21 @@ type CreateMeetingRequest struct {
 	Title       string  `json:"title" binding:"required"`
 	Description string  `json:"description"`
 	MeetingURL  *string `json:"meeting_url"` // Pointer allows null
+	// Recording Details
+	RecordingPath            *string `json:"recording_path"`
+	RecordingDurationSeconds *int    `json:"recording_duration_seconds"`
+	RecordingSizeBytes       *int64  `json:"recording_size_bytes"`
 }
 
 type UpdateMeetingRequest struct {
 	Title       *string `json:"title" binding:"omitempty,min=3"`
 	Description *string `json:"description"`
-	MeetingURL  *string `json:"meeting_url"` // Pointer allows null
+	MeetingURL  *string `json:"meeting_url"`
+	// Recording Details
+	RecordingPath            *string `json:"recording_path"`
+	RecordingDurationSeconds *int    `json:"recording_duration_seconds"`
+	RecordingSizeBytes       *int64  `json:"recording_size_bytes"`
+	Status                   *string `json:"status" binding:"omitempty,oneof=created processing completed failed"`
 }
 
 type MeetingHandler struct {
@@ -40,9 +49,12 @@ func (h *MeetingHandler) CreateMeeting(c *gin.Context) {
 	}
 
 	meeting := models.Meeting{
-		Title:       req.Title,
-		Description: req.Description,
-		MeetingURL:  req.MeetingURL,
+		Title:                    req.Title,
+		Description:              req.Description,
+		MeetingURL:               req.MeetingURL,
+		RecordingPath:            req.RecordingPath,
+		RecordingDurationSeconds: req.RecordingDurationSeconds,
+		RecordingSizeBytes:       req.RecordingSizeBytes,
 	}
 
 	createdMeeting, err := h.MeetingService.CreateMeeting(&meeting)
@@ -109,6 +121,18 @@ func (h *MeetingHandler) UpdateMeeting(c *gin.Context) {
 	}
 	if req.MeetingURL != nil {
 		updates["meeting_url"] = *req.MeetingURL
+	}
+	if req.RecordingPath != nil {
+		updates["recording_path"] = *req.RecordingPath
+	}
+	if req.RecordingDurationSeconds != nil {
+		updates["recording_duration_seconds"] = *req.RecordingDurationSeconds
+	}
+	if req.RecordingSizeBytes != nil {
+		updates["recording_size_bytes"] = *req.RecordingSizeBytes
+	}
+	if req.Status != nil {
+		updates["status"] = *req.Status
 	}
 
 	meeting, err := h.MeetingService.UpdateMeeting(uint(id), updates)
