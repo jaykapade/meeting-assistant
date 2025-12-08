@@ -7,6 +7,7 @@ import (
 
 type RouteConfig struct {
 	MeetingHandler *handler.MeetingHandler
+	UploadHandler  *handler.UploadHandler
 }
 
 func RegisterRoutes(router *gin.Engine, cfg *RouteConfig) {
@@ -19,5 +20,6 @@ func RegisterRoutes(router *gin.Engine, cfg *RouteConfig) {
 	})
 
 	MeetingRoutes(api, cfg.MeetingHandler)
+	UploadRoutes(api, cfg.UploadHandler)
 
 }

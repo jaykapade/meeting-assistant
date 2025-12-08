@@ -7,9 +7,9 @@ import (
 
 func MeetingRoutes(router *gin.RouterGroup, meetingHandler *handler.MeetingHandler) {
 	meetingsRouter := router.Group("/meetings")
-	meetingsRouter.POST("/", meetingHandler.CreateMeeting)
+	meetingsRouter.POST("", meetingHandler.CreateMeeting)
 	meetingsRouter.GET("/:id", meetingHandler.GetMeeting)
-	meetingsRouter.GET("/", meetingHandler.GetAllMeetings)
+	meetingsRouter.GET("", meetingHandler.GetAllMeetings)
 	meetingsRouter.PUT("/:id", meetingHandler.UpdateMeeting)
 	meetingsRouter.DELETE("/:id", meetingHandler.DeleteMeeting)
 }
