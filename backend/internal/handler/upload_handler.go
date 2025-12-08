@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -15,8 +17,15 @@ type UploadHandler struct {
 }
 
 func NewUploadHandler() *UploadHandler {
+	uploadDir := "uploads"
+
+	// Create the uploads directory if it doesn't exist
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		log.Fatalf("Failed to create uploads directory: %v", err)
+	}
+
 	return &UploadHandler{
-		UploadDir: "uploads",
+		UploadDir: uploadDir,
 		MaxSize:   50 << 20,
 	}
 }
@@ -57,5 +66,5 @@ func (h *UploadHandler) UploadFile(c *gin.Context) {
 	}
 
 	// 7. Return the success response
-	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "filePath": filePath, "filename": file.Filename})
+	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "file_id": filename, "filename": file.Filename})
 }
