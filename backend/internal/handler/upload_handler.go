@@ -74,6 +74,7 @@ func (h *UploadHandler) DownloadFile(c *gin.Context) {
 
 	// 1. Security Sanity Check
 	// Prevent directory traversal attacks (e.g. "../../../etc/passwd")
+	// TODO: Add a more robust security check
 	if strings.Contains(fileId, "..") || strings.Contains(fileId, "/") || strings.Contains(fileId, "\\") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filename"})
 		return
