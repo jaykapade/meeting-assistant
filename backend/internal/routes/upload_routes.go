@@ -6,6 +6,7 @@ import (
 )
 
 func UploadRoutes(router *gin.RouterGroup, uploadHandler *handler.UploadHandler) {
-	uploadRouter := router.Group("/upload")
-	uploadRouter.POST("", uploadHandler.UploadFile)
+	uploadRouter := router.Group("/file")
+	uploadRouter.POST("/upload", uploadHandler.UploadFile)
+	uploadRouter.GET("/download/:file_id", uploadHandler.DownloadFile)
 }

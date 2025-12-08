@@ -68,3 +68,31 @@ func (h *UploadHandler) UploadFile(c *gin.Context) {
 	// 7. Return the success response
 	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully", "file_id": filename, "filename": file.Filename})
 }
+
+func (h *UploadHandler) DownloadFile(c *gin.Context) {
+	fileId := c.Param("file_id")
+
+	// 1. Security Sanity Check
+	// Prevent directory traversal attacks (e.g. "../../../etc/passwd")
+	if strings.Contains(fileId, "..") || strings.Contains(fileId, "/") || strings.Contains(fileId, "\\") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filename"})
+		return
+	}
+
+	// 2. Construct full path
+	filePath := filepath.Join(h.UploadDir, fileId)
+
+	log.Println("filePath", filePath)
+	log.Println("fileId", fileId)
+	log.Println("h.UploadDir", h.UploadDir)
+
+	// 3. Check if file exists
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// 4. Serve the file
+	// Gin's c.File() automatically sets the correct Content-Type and headers
+	c.File(filePath)
+}
