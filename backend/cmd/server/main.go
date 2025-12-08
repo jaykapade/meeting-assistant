@@ -33,8 +33,10 @@ func main() {
 	// 3. Register services and handlers
 	meetingService := services.NewMeetingService(dbConn)
 	meetingHandler := handler.NewMeetingHandler(meetingService)
+	uploadHandler := handler.NewUploadHandler()
 	routeCfg := &routes.RouteConfig{
 		MeetingHandler: meetingHandler,
+		UploadHandler:  uploadHandler,
 	}
 
 	// 4. Register routes
