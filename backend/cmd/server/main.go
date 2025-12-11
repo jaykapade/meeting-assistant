@@ -31,8 +31,9 @@ func main() {
 	}
 
 	// 3. Register services and handlers
+	queueService := services.NewQueueService("localhost:6379")
 	meetingService := services.NewMeetingService(dbConn)
-	meetingHandler := handler.NewMeetingHandler(meetingService)
+	meetingHandler := handler.NewMeetingHandler(meetingService, queueService)
 	uploadHandler := handler.NewUploadHandler()
 	routeCfg := &routes.RouteConfig{
 		MeetingHandler: meetingHandler,
