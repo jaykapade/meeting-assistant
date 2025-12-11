@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -34,10 +35,11 @@ type UpdateMeetingRequest struct {
 
 type MeetingHandler struct {
 	MeetingService *services.MeetingService
+	QueueService   *services.QueueService
 }
 
-func NewMeetingHandler(meetingService *services.MeetingService) *MeetingHandler {
-	return &MeetingHandler{MeetingService: meetingService}
+func NewMeetingHandler(ms *services.MeetingService, qs *services.QueueService) *MeetingHandler {
+	return &MeetingHandler{MeetingService: ms, QueueService: qs}
 }
 
 func (h *MeetingHandler) CreateMeeting(c *gin.Context) {
@@ -139,6 +141,17 @@ func (h *MeetingHandler) UpdateMeeting(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	if meeting.RecordingPath != nil && meeting.Status == models.StatusCreated {
+		// Enqueue the meeting job
+		err = h.QueueService.EnqueueMeeting(meeting.ID, *meeting.RecordingPath)
+		if err != nil {
+			fmt.Printf("Failed to enqueue meeting job: %v", err)
+
+		} else {
+			fmt.Println("Job enqueued successfully")
+		}
 	}
 
 	c.JSON(http.StatusOK, meeting)
