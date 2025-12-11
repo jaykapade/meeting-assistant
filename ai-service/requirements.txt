@@ -1,0 +1,6 @@
+redis
+openai-whisper
+requests
+sqlalchemy
+psycopg2-binary
+python-dotenv
