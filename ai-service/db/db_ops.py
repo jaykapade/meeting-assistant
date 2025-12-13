@@ -18,7 +18,9 @@ def update_meeting_status(
             **fields
         )
     )
-    db.execute(stmt)
+    result = db.execute(stmt)
+    if result.rowcount == 0:
+        raise ValueError(f"Meeting {meeting_id} not found")
     db.commit()
 
 
@@ -56,5 +58,7 @@ def mark_failed(db: Session, meeting_id: int):
             status=MeetingStatus.failed,
         )
     )
-    db.execute(stmt)
+    result = db.execute(stmt)
+    if result.rowcount == 0:
+        raise ValueError(f"Meeting {meeting_id} not found")
     db.commit()
