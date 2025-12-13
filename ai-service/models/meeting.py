@@ -7,7 +7,8 @@ from sqlalchemy import (
     BigInteger,
     Enum,
     ForeignKey,
-    func
+    func,
+    text
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from db.session import Base
@@ -52,7 +53,7 @@ class Meeting(Base):
     status = Column(
         Enum(MeetingStatus, name="meeting_status"),
         nullable=False,
-        server_default="created",
+        server_default=text("'created'::meeting_status"),
         index=True
     )
 
