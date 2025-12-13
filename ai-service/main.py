@@ -1,31 +1,48 @@
+from models.meeting import MeetingStatus
+from db.db_ops import update_meeting_status, save_results, mark_failed
+from db.session import SessionLocal
 import os
 import json
 import time
+import signal
 import redis
 import logging
 from dotenv import load_dotenv
+
+# Load environment variables FIRST, before any other imports that depend on them
+load_dotenv()
+
+# Now import modules that depend on environment variables
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv()
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
-REDIS_PORT = os.getenv('REDIS_PORT', 6379)
+REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
 QUEUE_NAME = "meeting_jobs"
+
+# Global flag for graceful shutdown
+shutdown_flag = False
 
 
 def process_meeting_job(job_data):
-    meeting_id = job_data.get('meeting_id')
+    # Job data uses 'id'
+    meeting_id = job_data.get('id')
     file_path = job_data.get('file_path')
 
-    logger.info(f"Processing meeting job for meeting {meeting_id}")
+    if not meeting_id:
+        logger.error(f"Missing meeting_id in job_data: {job_data}")
+        return
 
+    logger.info(f"Starting job for meeting {meeting_id}")
+
+    # Create database session
+    db = SessionLocal()
     try:
         # 1.Update DB -> processing
-        # update_meeting_status(meeting_id, "processing")
+        update_meeting_status(db, meeting_id, MeetingStatus.processing)
         logger.info(f"Status updated to processing for {meeting_id}")
 
         # 2. Transcribe (Whisper)
@@ -41,15 +58,40 @@ def process_meeting_job(job_data):
         action_items = ["Action 1", "Action 2"]
 
         # 4. Update DB -> Completed
-        # update_meeting_result(meeting_id, transcript, summary, action_items)
+        save_results(
+            db,
+            meeting_id,
+            transcript=transcript,
+            summary=summary,
+            action_items=action_items
+        )
         logger.info(f"✅ Job {meeting_id} Completed Successfully")
 
     except Exception as e:
         logger.error(f"❌ Job Failed: {str(e)}")
-        # update_meeting_status(meeting_id, "failed")
+        try:
+            mark_failed(db, meeting_id)
+        except Exception as db_error:
+            logger.error(f"Failed to mark meeting as failed: {db_error}")
+    finally:
+        db.close()
+
+
+def signal_handler(sig, frame):
+    """Handle Ctrl+C gracefully"""
+    global shutdown_flag
+    logger.info(
+        "\n🛑 Shutdown signal received. Finishing current job and exiting...")
+    shutdown_flag = True
 
 
 def start_consumer():
+    global shutdown_flag
+
+    # Register signal handler for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     # Connect to Redis
     try:
         r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT,
@@ -61,19 +103,31 @@ def start_consumer():
         return
 
     logger.info(f"🎧 Waiting for jobs in queue: '{QUEUE_NAME}'...")
+    logger.info("Press Ctrl+C to stop gracefully")
 
-    while True:
-        # BLPOP returns a tuple: (queue_name, data)
-        # timeout=0 means wait forever
-        task = r.blpop(QUEUE_NAME, timeout=0)
+    while not shutdown_flag:
+        try:
+            # Use a timeout so we can check shutdown_flag periodically
+            # timeout=5 means check every 5 seconds
+            task = r.blpop(QUEUE_NAME, timeout=5)
 
-        if task:
-            queue, raw_data = task
-            try:
-                job_data = json.loads(raw_data)
-                process_job(job_data)
-            except json.JSONDecodeError:
-                logger.error(f"Failed to decode JSON: {raw_data}")
+            if task:
+                queue, raw_data = task
+                try:
+                    job_data = json.loads(raw_data)
+                    logger.info(
+                        f"Job received for meeting_id: {job_data.get('id')}")
+                    process_meeting_job(job_data)
+                except json.JSONDecodeError:
+                    logger.error(f"Failed to decode JSON: {raw_data}")
+        except KeyboardInterrupt:
+            # This should be caught by signal handler, but just in case
+            break
+        except Exception as e:
+            if not shutdown_flag:
+                logger.error(f"Error in consumer loop: {e}")
+
+    logger.info("👋 Consumer stopped gracefully")
 
 
 if __name__ == "__main__":
