@@ -8,6 +8,8 @@ import signal
 import redis
 import logging
 from dotenv import load_dotenv
+from audio_processor import transcribe_audio
+from llm_processor import generate_summary
 
 # Load environment variables FIRST, before any other imports that depend on them
 load_dotenv()
@@ -47,15 +49,13 @@ def process_meeting_job(job_data):
 
         # 2. Transcribe (Whisper)
         logger.info("🎙️ Starting Transcription...")
-        # transcript = transcribe_audio(file_path)
-        transcript = "Fake transcript for testing"  # Placeholder
-        time.sleep(2)  # Simulate work
+        transcript = transcribe_audio(file_path)
 
         # 3. Summarize (Ollama)
         logger.info("🧠 Generating Summary with Ollama...")
-        # summary, action_items = generate_summary(transcript)
-        summary = "Fake summary"
-        action_items = ["Action 1", "Action 2"]
+        result = generate_summary(transcript)
+        summary = result.get("summary", "")
+        action_items = result.get("action_items", [])
 
         # 4. Update DB -> Completed
         save_results(
