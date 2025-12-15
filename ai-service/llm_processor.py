@@ -78,11 +78,14 @@ def generate_summary(transcript_text):
         "stream": False
     }
 
+    ai_content = ""
+    response = None
+
     try:
         logger.info(
             f"🧠 Sending {len(transcript_text)} chars to Ollama at {OLLAMA_URL}...")
 
-        response = requests.post(OLLAMA_URL, json=payload)
+        response = requests.post(OLLAMA_URL, json=payload, timeout=30)
         response.raise_for_status()
 
         result_json = response.json()
@@ -95,14 +98,27 @@ def generate_summary(transcript_text):
         return parsed_data
 
     except json.JSONDecodeError:
-        logger.error(
-            f"Failed to parse JSON from Ollama. Raw response: {ai_content}")
-        # Fallback so the pipeline doesn't crash
+        # Handle malformed JSON in the AI response
+        logger.exception(
+            "Failed to parse JSON from Ollama. Raw response: %s", ai_content
+        )
         return {
-            # Just return raw text as summary
             "summary": ai_content[:500] + "...",
             "action_items": []
         }
-    except Exception as e:
-        logger.error(f"Ollama service failed: {e}")
-        return {"summary": "Error generating summary", "action_items": []}
+    except requests.RequestException:
+        # Handle HTTP / network errors from requests
+        logger.exception("Request to Ollama failed")
+        return {
+            "summary": "",
+            "action_items": []
+        }
+    except Exception:
+        # Catch-all for any other unexpected errors
+        logger.exception(
+            "Unexpected error while generating summary from Ollama")
+
+        return {
+            "summary": '',
+            "action_items": []
+        }
