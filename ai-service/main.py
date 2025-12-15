@@ -51,6 +51,9 @@ def process_meeting_job(job_data):
         logger.info("🎙️ Starting Transcription...")
         transcript = transcribe_audio(file_path)
 
+        if not transcript:
+            logger.error(f"No transcript found for {meeting_id}")
+            return
         # 3. Summarize (Ollama)
         logger.info("🧠 Generating Summary with Ollama...")
         result = generate_summary(transcript)
