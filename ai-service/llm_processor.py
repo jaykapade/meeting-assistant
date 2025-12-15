@@ -85,7 +85,7 @@ def generate_summary(transcript_text):
         logger.info(
             f"🧠 Sending {len(transcript_text)} chars to Ollama at {OLLAMA_URL}...")
 
-        response = requests.post(OLLAMA_URL, json=payload, timeout=30)
+        response = requests.post(OLLAMA_URL, json=payload, timeout=300)
         response.raise_for_status()
 
         result_json = response.json()

@@ -27,13 +27,13 @@ def transcribe_audio(file_path: str) -> str:
         logger.info(f"Sending audio file to Whisper: {full_file_path}")
         with open(full_file_path, 'rb') as f:
             files = {'audio_file': (full_file_path, f, 'audio/mpeg')}
-            response = requests.post(url, files=files, timeout=30)
+            response = requests.post(url, files=files, timeout=300)
 
         response.raise_for_status()
         result = response.text
         logger.info(f"Transcription result: {result}")
         return result
 
-    except requests.RequestException:
-        logger.exception("Transcription service request failed")
-        raise
+    except Exception as e:
+        logger.error(f"Transcription service failed: {e}")
+        raise e
