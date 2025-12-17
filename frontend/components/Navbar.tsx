@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Navbar() {
   return (
@@ -15,13 +16,13 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" asChild>
               <Link href="/">Dashboard</Link>
             </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/meetings">Meetings</Link>
+            <Button size="sm" asChild>
+              <Link href="/meetings/new">New Meeting</Link>
             </Button>
-            <Button size="sm">New Meeting</Button>
           </div>
         </div>
       </div>
