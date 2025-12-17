@@ -8,48 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-export enum MeetingStatus {
-  CREATED = "created",
-  PROCESSING = "processing",
-  COMPLETED = "completed",
-  FAILED = "failed",
-}
-
-export interface Meeting {
-  id: number;
-
-  // Basic Info
-  title: string;
-  description?: string | null;
-
-  // Meeting Details
-  meeting_url?: string | null;
-  meeting_platform?: string | null;
-  scheduled_at?: string | null; // ISO date
-
-  // Recording Details
-  recording_path?: string | null;
-  recording_size_bytes?: number | null;
-  recording_duration_seconds?: number | null;
-
-  // AI Results
-  transcript?: string | null;
-  summary?: string | null;
-
-  // JSONB fields
-  action_items?: string[] | null;
-
-  // Status
-  status: MeetingStatus;
-
-  // Ownership
-  user_id?: number | null;
-
-  // Timestamps
-  created_at: string;
-  updated_at: string;
-}
+import { Meeting, MeetingStatus } from "@/types/meeting";
 
 export default async function Dashboard() {
   let meetings: Meeting[] = [];
@@ -116,36 +75,25 @@ export default async function Dashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {meetings.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      No meetings available
+                {meetings.map((meeting) => (
+                  <TableRow key={meeting.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">
+                      {meeting.title || "Untitled"}
+                    </TableCell>
+                    <TableCell className="max-w-md truncate">
+                      {meeting.description || "-"}
+                    </TableCell>
+                    <TableCell>{meeting.meeting_platform || "-"}</TableCell>
+                    <TableCell className="capitalize">
+                      {getStatusBadge(meeting.status)}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {meeting.created_at
+                        ? new Date(meeting.created_at).toLocaleDateString()
+                        : "-"}
                     </TableCell>
                   </TableRow>
-                ) : (
-                  meetings.map((meeting) => (
-                    <TableRow key={meeting.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">
-                        {meeting.title || "Untitled"}
-                      </TableCell>
-                      <TableCell className="max-w-md truncate">
-                        {meeting.description || "-"}
-                      </TableCell>
-                      <TableCell>{meeting.meeting_platform || "-"}</TableCell>
-                      <TableCell className="capitalize">
-                        {getStatusBadge(meeting.status)}
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
-                        {meeting.created_at
-                          ? new Date(meeting.created_at).toLocaleDateString()
-                          : "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
           </div>
