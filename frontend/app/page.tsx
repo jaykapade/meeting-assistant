@@ -1,3 +1,4 @@
+import { getMeetings } from "@/api/meeting";
 import {
   Table,
   TableBody,
@@ -50,23 +51,17 @@ export interface Meeting {
   updated_at: string;
 }
 
-async function getMeetings(): Promise<Meeting[]> {
-  const response = await fetch("http://localhost:8080/api/v1/meetings", {
-    cache: "no-cache",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch meetings");
-  }
-
-  const data = await response.json();
-  return data;
-}
-
 export default async function Dashboard() {
-  const meetings = await getMeetings();
+  let meetings: Meeting[] = [];
+  let fetchError: string | null = null;
 
-  console.log("meeting", meetings);
+  try {
+    meetings = await getMeetings();
+  } catch (error) {
+    console.error("Failed to fetch meetings:", error);
+    fetchError =
+      "Could not load meetings. The backend service may be unavailable.";
+  }
 
   const getStatusBadge = (status: MeetingStatus) => {
     const statusStyles = {
@@ -95,6 +90,12 @@ export default async function Dashboard() {
           Manage and track your meetings
         </p>
       </div>
+
+      {fetchError && (
+        <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 p-4 text-center text-red-500">
+          <p>{fetchError}</p>
+        </div>
+      )}
 
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <div className="p-6">
