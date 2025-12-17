@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Calendar, Menu } from "lucide-react";
+import { Calendar } from "lucide-react";
 
 export function Navbar() {
   return (
