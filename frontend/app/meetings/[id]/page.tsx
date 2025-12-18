@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getMeeting } from "@/api/meeting";
 import { Button } from "@/components/ui/button";
+import { DeleteMeetingButton } from "@/components/DeleteMeetingButton";
 import { MeetingStatus, type Meeting as MeetingType } from "@/types/meeting";
 
 function formatDateTime(value?: string | null) {
@@ -111,7 +112,13 @@ export default async function MeetingPage({
           <Button variant="outline" asChild>
             <Link href="/">Back</Link>
           </Button>
-          <Button variant="destructive">Delete</Button>
+          <Button asChild>
+            <Link href={`/meetings/${meeting.id}/edit`}>Edit</Link>
+          </Button>
+          <DeleteMeetingButton
+            meetingId={meeting.id}
+            meetingTitle={meeting.title}
+          />
         </div>
       </div>
 

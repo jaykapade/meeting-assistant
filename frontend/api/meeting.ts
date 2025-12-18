@@ -1,4 +1,4 @@
-import { Meeting } from "@/types/meeting";
+import { CreateMeetingInput, Meeting } from "@/types/meeting";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -26,14 +26,6 @@ export async function getMeeting(id: string | number): Promise<Meeting> {
   return response.json();
 }
 
-export type CreateMeetingInput = {
-  title: string;
-  description?: string | null;
-  meeting_url?: string | null;
-  meeting_platform?: string | null;
-  scheduled_at?: string | null;
-};
-
 export async function createMeeting(
   input: CreateMeetingInput
 ): Promise<Meeting> {
@@ -50,4 +42,33 @@ export async function createMeeting(
   }
 
   return response.json();
+}
+
+export async function updateMeeting(
+  id: string | number,
+  input: CreateMeetingInput
+): Promise<Meeting> {
+  const response = await fetch(`${BASE_URL}/api/v1/meetings/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update meeting");
+  }
+
+  return response.json();
+}
+
+export async function deleteMeeting(id: string | number): Promise<void> {
+  const response = await fetch(`${BASE_URL}/api/v1/meetings/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete meeting");
+  }
 }

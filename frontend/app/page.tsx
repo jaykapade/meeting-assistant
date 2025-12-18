@@ -94,16 +94,22 @@ export default async function Dashboard() {
                     <TableCell className="capitalize">
                       {getStatusBadge(meeting.status)}
                     </TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      <Link
-                        href={meeting.meeting_url || "#"}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="underline-offset-4 hover:underline"
-                      >
-                        {meeting.meeting_url || "-"}
-                      </Link>
-                      <ExternalLink className="h-4 w-4" />
+                    <TableCell>
+                      {meeting.meeting_url ? (
+                        <>
+                          <Link
+                            href={meeting.meeting_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline-offset-4 hover:underline flex items-center gap-2"
+                          >
+                            {meeting.meeting_url}
+                            <ExternalLink className="h-4 w-4" />
+                          </Link>
+                        </>
+                      ) : (
+                        "-"
+                      )}
                     </TableCell>
                     <TableCell>{meeting.meeting_platform || "-"}</TableCell>
                     <TableCell className="text-right text-muted-foreground">

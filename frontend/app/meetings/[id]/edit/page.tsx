@@ -2,18 +2,25 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { createMeeting } from "@/api/meeting";
+import { useMemo, useState, useEffect } from "react";
+import { getMeeting, updateMeeting } from "@/api/meeting";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/DatePicker";
-import { CreateMeetingInput } from "@/types/meeting";
+import { CreateMeetingInput, Meeting } from "@/types/meeting";
 
 type FormState = Omit<CreateMeetingInput, "scheduled_at"> & {
   scheduled_at: Date | null;
 };
 
-export default function NewMeetingPage() {
+export default function EditMeetingPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
+  const [id, setId] = useState<string | null>(null);
+  const [meeting, setMeeting] = useState<Meeting | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,10 +32,45 @@ export default function NewMeetingPage() {
     scheduled_at: null,
   });
 
+  useEffect(() => {
+    async function loadMeeting() {
+      try {
+        const resolvedParams = await params;
+        const meetingId = resolvedParams.id;
+        setId(meetingId);
+
+        const meetingData = await getMeeting(meetingId);
+        setMeeting(meetingData);
+
+        // Pre-fill form with existing data
+        setForm({
+          title: meetingData.title || "",
+          description: meetingData.description || "",
+          meeting_url: meetingData.meeting_url || "",
+          meeting_platform: meetingData.meeting_platform || "",
+          scheduled_at: meetingData.scheduled_at
+            ? new Date(meetingData.scheduled_at)
+            : null,
+        });
+      } catch (err) {
+        console.error("Failed to fetch meeting:", err);
+        setError(
+          "Could not load meeting. The backend service may be unavailable."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadMeeting();
+  }, [params]);
+
   const canSubmit = useMemo(() => form.title.trim().length > 0, [form.title]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!id) return;
+
     setError(null);
     setIsSubmitting(true);
 
@@ -43,23 +85,55 @@ export default function NewMeetingPage() {
           : null,
       };
 
-      const created = await createMeeting(payload);
-      router.push(`/meetings/${created.id}`);
+      await updateMeeting(id, payload);
+      router.push(`/meetings/${id}`);
     } catch (err) {
       console.error(err);
       setError(
-        "Could not create meeting. The backend service may be unavailable."
+        "Could not update meeting. The backend service may be unavailable."
       );
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="container mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Edit Meeting</h1>
+          <p className="text-muted-foreground mt-2">
+            Loading meeting details...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!meeting) {
+    return (
+      <div className="container mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Edit Meeting</h1>
+          <p className="text-muted-foreground mt-2">Meeting not found</p>
+        </div>
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 p-4 text-center text-red-500">
+            <p>{error}</p>
+          </div>
+        )}
+        <Button variant="outline" asChild>
+          <Link href="/">Back</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">New Meeting</h1>
-        <p className="text-muted-foreground mt-2">Add meeting details</p>
+        <h1 className="text-3xl font-bold tracking-tight">Edit Meeting</h1>
+        <p className="text-muted-foreground mt-2">Update meeting details</p>
       </div>
 
       {error && (
@@ -156,10 +230,10 @@ export default function NewMeetingPage() {
 
             <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
               <Button variant="outline" asChild disabled={isSubmitting}>
-                <Link href="/">Cancel</Link>
+                <Link href={id ? `/meetings/${id}` : "/"}>Cancel</Link>
               </Button>
               <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create meeting"}
+                {isSubmitting ? "Updating..." : "Update meeting"}
               </Button>
             </div>
           </div>

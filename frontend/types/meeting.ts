@@ -39,3 +39,11 @@ export interface Meeting {
   created_at: string;
   updated_at: string;
 }
+
+export type CreateMeetingInput = {
+  title: string;
+  description?: string | null;
+  meeting_url?: string | null;
+  meeting_platform?: string | null;
+  scheduled_at?: string | null;
+};
