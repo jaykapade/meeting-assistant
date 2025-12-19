@@ -1,15 +1,12 @@
 import Link from "next/link";
-import { getMeeting } from "@/api/meeting";
+import { getMeeting } from "@/requests/meeting";
 import { Button } from "@/components/ui/button";
 import { DeleteMeetingButton } from "@/components/DeleteMeetingButton";
+import { AudioUploadDropzone } from "@/components/AudioUploadDropzone";
 import { MeetingStatus, type Meeting as MeetingType } from "@/types/meeting";
-
-function formatDateTime(value?: string | null) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString();
-}
+import { Download } from "lucide-react";
+import { formatDateTime, formatDuration } from "@/utils/time";
+import { formatFileSize } from "@/utils/file";
 
 function StatusBadge({ status }: { status: MeetingStatus }) {
   const statusStyles = {
@@ -93,6 +90,14 @@ export default async function MeetingPage({
     Boolean(meeting.transcript) ||
     (meeting.action_items?.length ?? 0) > 0;
 
+  // Check if meeting is in the past (scheduled_at is older than current time)
+  const isMeetingPast =
+    !meeting.scheduled_at ||
+    (meeting.scheduled_at && new Date(meeting.scheduled_at) < new Date());
+
+  // Only show upload if meeting is past and no recording exists yet
+  const showUpload = isMeetingPast && !meeting.recording_path;
+
   return (
     <div className="container mx-auto">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
@@ -123,6 +128,12 @@ export default async function MeetingPage({
       </div>
 
       <div className="grid gap-6">
+        {showUpload && (
+          <Section title="Upload Recording">
+            <AudioUploadDropzone meetingId={meeting.id} />
+          </Section>
+        )}
+
         <Section title="Details">
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -184,6 +195,54 @@ export default async function MeetingPage({
             </div>
           </dl>
         </Section>
+
+        {meeting.recording_path && (
+          <Section title="Recording">
+            <div className="space-y-4">
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    File Name
+                  </dt>
+                  <dd className="mt-1 text-sm font-mono break-all">
+                    {meeting.recording_path}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    File Size
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {formatFileSize(meeting.recording_size_bytes)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    Duration
+                  </dt>
+                  <dd className="mt-1 text-sm">
+                    {formatDuration(meeting.recording_duration_seconds)}
+                  </dd>
+                </div>
+              </dl>
+              <div className="pt-2">
+                <Button variant="outline" asChild className="w-full sm:w-auto">
+                  <a
+                    href={`${
+                      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+                    }/api/v1/file/download/${meeting.recording_path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Recording
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </Section>
+        )}
 
         <Section title="AI output">
           {!hasAiOutput ? (

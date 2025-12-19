@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { createMeeting } from "@/api/meeting";
+import { createMeeting } from "@/requests/meeting";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/DatePicker";
 import { CreateMeetingInput } from "@/types/meeting";
