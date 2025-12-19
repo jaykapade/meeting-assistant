@@ -1,4 +1,4 @@
-import { getMeetings } from "@/api/meeting";
+import { getMeetings } from "@/requests/meeting";
 import {
   Table,
   TableBody,
@@ -97,7 +97,7 @@ export default async function Dashboard() {
                     <TableCell>
                       {meeting.meeting_url ? (
                         <>
-                          <Link
+                          <a
                             href={meeting.meeting_url}
                             target="_blank"
                             rel="noreferrer"
@@ -105,7 +105,7 @@ export default async function Dashboard() {
                           >
                             {meeting.meeting_url}
                             <ExternalLink className="h-4 w-4" />
-                          </Link>
+                          </a>
                         </>
                       ) : (
                         "-"

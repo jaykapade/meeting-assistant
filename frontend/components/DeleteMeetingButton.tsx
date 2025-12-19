@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { deleteMeeting } from "@/api/meeting";
+import { deleteMeeting } from "@/requests/meeting";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
