@@ -47,3 +47,5 @@ export type CreateMeetingInput = {
   meeting_platform?: string | null;
   scheduled_at?: string | null;
 };
+
+export type UpdateMeetingInput = CreateMeetingInput;
