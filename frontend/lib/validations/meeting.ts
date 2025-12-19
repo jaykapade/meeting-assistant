@@ -14,7 +14,11 @@ export const meetingFormSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => (val === "" ? null : val)),
-  meeting_url: z.url("Please enter a valid URL"),
+  meeting_url: z
+    .union([z.string().url("Please enter a valid URL"), z.literal("")])
+    .optional()
+    .nullable()
+    .transform((val) => (val === "" ? null : val)),
   meeting_platform: z
     .union([
       z.string().max(100, "Platform name must be less than 100 characters"),
