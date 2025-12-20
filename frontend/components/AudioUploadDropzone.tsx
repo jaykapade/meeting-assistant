@@ -6,6 +6,7 @@ import { Upload, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadFile, updateMeeting } from "@/requests/meeting";
 import { useRouter } from "next/navigation";
+import { getAudioDuration } from "@/utils/file";
 
 interface AudioUploadDropzoneProps {
   meetingId: string | number;
@@ -33,15 +34,19 @@ export function AudioUploadDropzone({
       setUploadProgress(0);
 
       try {
-        // Step 1: Upload the file
+        // Step 1: Get audio duration
+        const duration = await getAudioDuration(file);
+
+        // Step 2: Upload the file
         const uploadResponse = await uploadFile(file, (progress) => {
           setUploadProgress(progress);
         });
 
-        // Step 2: Update meeting with recording_path
+        // Step 3: Update meeting with recording_path, size, and duration
         await updateMeeting(meetingId, {
           recording_path: uploadResponse.file_id,
           recording_size_bytes: file.size,
+          recording_duration_seconds: duration,
         });
 
         setSuccess(true);
@@ -165,4 +170,3 @@ export function AudioUploadDropzone({
     </div>
   );
 }
-
