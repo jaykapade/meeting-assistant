@@ -16,8 +16,24 @@ type DBConfig struct {
 	SSLMode  string
 }
 
+type StorageConfig struct {
+	Driver    string // "s3", "minio", or "local"
+	Bucket    string
+	Endpoint  string
+	Region    string
+	AccessKey string
+	SecretKey string
+}
+
+type QueueConfig struct {
+	URL string // e.g., "localhost:6379" or "redis:6379"
+}
+
 type Config struct {
-	DB DBConfig
+	DB         DBConfig
+	Storage    StorageConfig
+	Redis      QueueConfig
+	ServerPort string
 }
 
 func Load() *Config {
@@ -37,6 +53,18 @@ func Load() *Config {
 			Port:     getEnv("DB_PORT", "5432"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"), // Default to disable for dev
 		},
+		Storage: StorageConfig{
+			Driver:    getEnv("STORAGE_DRIVER", "minio"), // Default to minio for dev
+			Bucket:    getEnv("STORAGE_BUCKET", "meeting-assistant"),
+			Endpoint:  getEnv("STORAGE_ENDPOINT", "http://localhost:9000"),
+			Region:    getEnv("STORAGE_REGION", "us-east-1"),
+			AccessKey: getEnv("STORAGE_ACCESS_KEY", "minioadmin"),
+			SecretKey: getEnv("STORAGE_SECRET_KEY", "minioadmin"),
+		},
+		Redis: QueueConfig{
+			URL: getEnv("REDIS_URL", "localhost:6379"), // Default to localhost for dev
+		},
+		ServerPort: getEnv("SERVER_PORT", "8080"), // Default to 8080
 	}
 }
 
