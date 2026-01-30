@@ -30,7 +30,7 @@ type Meeting struct {
 	// Recording Details
 	RecordingPath            *string `gorm:"type:varchar(500)" json:"recording_path"`
 	RecordingSizeBytes       *int64  `json:"recording_size_bytes"`
-	RecordingDurationSeconds *int    `json:"recording_duration_seconds"`
+	RecordingDurationSeconds *int    `json:"recording_duration_seconds" default:"0"`
 
 	// AI Results: Text is fine for now. If transcripts get >10MB, we move to S3.
 	Transcript *string `gorm:"type:text" json:"transcript"`

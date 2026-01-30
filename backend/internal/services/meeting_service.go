@@ -2,15 +2,17 @@ package services
 
 import (
 	"github.com/jaykapade/meeting-assistant/backend/internal/models"
+	"github.com/jaykapade/meeting-assistant/backend/internal/storage"
 	"gorm.io/gorm"
 )
 
 type MeetingService struct {
-	DB *gorm.DB
+	DB    *gorm.DB
+	Store storage.Provider
 }
 
-func NewMeetingService(db *gorm.DB) *MeetingService {
-	return &MeetingService{DB: db}
+func NewMeetingService(db *gorm.DB, store storage.Provider) *MeetingService {
+	return &MeetingService{DB: db, Store: store}
 }
 
 func (s *MeetingService) CreateMeeting(meeting *models.Meeting) (*models.Meeting, error) {

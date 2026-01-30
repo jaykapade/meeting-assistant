@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/gin-contrib/cors"
@@ -11,6 +11,7 @@ import (
 	"github.com/jaykapade/meeting-assistant/backend/internal/handler"
 	"github.com/jaykapade/meeting-assistant/backend/internal/routes"
 	"github.com/jaykapade/meeting-assistant/backend/internal/services"
+	"github.com/jaykapade/meeting-assistant/backend/internal/storage"
 )
 
 func main() {
@@ -24,24 +25,52 @@ func main() {
 	}
 
 	// err = dbConn.AutoMigrate(&models.Meeting{})
+	// if err != nil {
+	// 	log.Fatalf("Failed to migrate database: %v", err)
+	// } else {
+	// 	fmt.Println("Database migrated successfully")
+	// }
 
-	if err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	} else {
-		fmt.Println("Database migrated successfully")
+	log.Printf("💾 Database connected successfully: %s", cfg.DB.Name)
+
+	//3. Connect Storage
+	var store storage.Provider
+	ctx := context.Background()
+
+	// This switch allows us to change infrastructure just by changing an ENV var
+	switch cfg.Storage.Driver {
+	case "minio", "s3":
+		store, err = storage.NewS3Provider(
+			ctx,
+			cfg.Storage.Bucket,
+			cfg.Storage.Endpoint,
+			cfg.Storage.Region,
+			cfg.Storage.AccessKey,
+			cfg.Storage.SecretKey,
+		)
+		if err != nil {
+			log.Fatalf("Failed to initialize storage: %v", err)
+		}
+	case "local":
+		// You can implement a simple LocalDiskProvider later if needed
+		log.Fatal("Local storage driver not yet implemented")
+	default:
+		log.Fatalf("Unknown storage driver: %s", cfg.Storage.Driver)
 	}
 
-	// 3. Register services and handlers
-	queueService := services.NewQueueService("localhost:6379")
-	meetingService := services.NewMeetingService(dbConn)
+	log.Printf("✅ Storage initialized: %s (Bucket: %s)", cfg.Storage.Driver, cfg.Storage.Bucket)
+
+	// 4. Register services and handlers
+	queueService := services.NewQueueService(cfg.Redis.URL)
+	meetingService := services.NewMeetingService(dbConn, store)
 	meetingHandler := handler.NewMeetingHandler(meetingService, queueService)
-	uploadHandler := handler.NewUploadHandler()
+	uploadHandler := handler.NewUploadHandler(store)
 	routeCfg := &routes.RouteConfig{
 		MeetingHandler: meetingHandler,
 		UploadHandler:  uploadHandler,
 	}
 
-	// 4. Register routes
+	// 5. Register routes
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
@@ -57,10 +86,11 @@ func main() {
 	}))
 	routes.RegisterRoutes(router, routeCfg)
 
-	// 5. Start server
-	err = router.Run(":8080") // TODO: Make port configurable
+	// 6. Start server
+	serverAddr := ":" + cfg.ServerPort
+	log.Printf("🚀 Starting server on port %s", cfg.ServerPort)
+	err = router.Run(serverAddr)
 	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
-	fmt.Println("Server started successfully")
 }
